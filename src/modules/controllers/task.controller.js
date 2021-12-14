@@ -1,19 +1,14 @@
-const tasks = [];
+const Tasks = require('../../db/models/task/index')
 
-module.exports.getAllTasks = async (req, res, next) => {
-  res.send({data: tasks});
+module.exports.getAllTasks = (req, res) => {
+  Task.find().then(result => {
+    res.send({ data: result });
+  });
 };
 
-module.exports.createNewTask = (req, res, next) => {
+module.exports.createNewTask = (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
   const body = req.body;
-  if (body.hasOwnProperty('text') && body.hasOwnProperty('isCheck')) {
-    body.id = Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
-    tasks.push(body);
-    res.send({data: tasks});
-  } else {
-    res.status(422).send('Error! Params not correct');
-  }
-};
 
 module.exports.changeTaskInfo = (req, res, next) => {
   const body = req.body;
@@ -26,9 +21,9 @@ module.exports.changeTaskInfo = (req, res, next) => {
         }
       }
     });
-    res.send({data: tasks});
-  } else {
-    res.status(422).send('Error! Params not correct');
+    task.save().then(result => {
+      res.send(result);
+    }).catch(err => res.send(err));
   }
 };
 
@@ -45,5 +40,46 @@ module.exports.deleteTask = (req, res, next) => {
     res.send({data: tasks});
   } else {
     res.status(404).send('Task not found');
-  }
+  }  
+}
+
+module.exports.deleteTask = (req, res) => {
+  const id = req.query.id;
+  if (id) {
+    Task.deleteOne({ _id: id }).then(result => {
+      res.send("Delete")
+    }).catch(err => {
+      res.send(err);
+    })
+  };
 };
+
+module.exports.changeTaskInfo = (req, res) => {
+  const body = req.body;
+  const id = req.body.id;
+  const selector = { _id: id };
+  
+  if (body.hasOwnProperty("isCheck") && body.hasOwnProperty("id")) {  
+    Task.updateOne(selector, {
+      $set: { isCheck: body.isCheck }
+    }).then(result => {
+        res.send(result)
+      }).catch(err => {
+        res.send(err);});
+
+  } else if (body.hasOwnProperty("id") && body.hasOwnProperty("text")) {
+    let newText = body.text; 
+
+    Task.updateOne(selector, {
+        $set: { text: newText }
+      }).then(result => {
+          res.send(result)
+        }
+      ).catch(err => {
+         res.send(err)}
+    )}; 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+  }

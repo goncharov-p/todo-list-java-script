@@ -17,6 +17,7 @@ module.exports.createNewTask = (req, res, next) => {
 
 module.exports.changeTaskInfo = (req, res, next) => {
   const body = req.body;
+  
   if (body.hasOwnProperty('id') && (body.hasOwnProperty('text') || body.hasOwnProperty('isCheck'))) {
     tasks.forEach((item, i) => {
       if(item.id === body.id) {

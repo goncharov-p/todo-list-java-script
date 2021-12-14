@@ -78,8 +78,5 @@ module.exports.changeTaskInfo = (req, res) => {
       ).catch(err => {
          res.send(err)}
     )}; 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
   }
+}

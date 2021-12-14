@@ -4,25 +4,25 @@ let valueInput = '';
 let input = null;
 let activeEditTask = null;
 
+const refrashBd = async() => {
+  const resp = await fetch('http://localhost:8000/allTasks', {
+    method: 'GET'
+  });
+  let result = await resp.json();
+  allTasks=result.data;
+  render();
  
+}
+
 window.onload = async function init () {
     input = document.getElementById('add-task');
     input.addEventListener('change', updateValue);
-    const resp = await fetch('http://localhost:8000/allTasks', {
-      method: 'GET'
-    });
-    let result = await resp.json();
-    allTasks=result.data;
-    render();
+ refrashBd();
    
 }
  
  
 onClickButton = async() => {
-    allTasks.push({
-        text: valueInput,
-        isCheck: false
-    }); 
     const resp = await fetch('http://localhost:8000/createTask', {
       method: 'POST',
       headers: {
@@ -34,11 +34,13 @@ onClickButton = async() => {
         isCheck:false
       })
     });
-    let result = await resp.json();
-    allTasks=result.data;
-    localStorage.setItem('tasks',JSON.stringify(allTasks));
+    let result = await resp.json()
+    .then((resp) => {
+      allTasks.push(resp);
+    })
     valueInput = '';
     input.value = '';
+
     render();
 }
  
@@ -54,12 +56,12 @@ updateValue = (event) => {
  
 render =  () => {
   const content = document.getElementById('content-page');
+  console.log("render");
   while(content.firstChild){ // пишем цикл для того, чтобы не дублировался первый элемент
     content.removeChild(content.firstChild);// удаляем дочерный элемент контента
   }
   
     allTasks.sort((a,b) => a.isCheck > b.isCheck ? 1 : a.isCheck < b.isCheck ? -1: 0);
-
     allTasks.map((item, index) => {
     const container = document.createElement('div'); // создаём контейнер для нашего таска и для этого мы создаем див элемент
     container.id = `task-${index}`;
@@ -74,7 +76,8 @@ render =  () => {
    
    
  
-    if(item.id === activeEditTask) {//если индекс равен едит таск выполняем
+    if(item._id === activeEditTask) {//если индекс равен едит таск выполняем
+   
       const inputTask = document.createElement('input');//создаем переменную в нее записываем инпут
       inputTask.type = 'text';//указываем что будем хранить текст
       inputTask.value = item.text;//сохраняем в инпут введенный текст
@@ -90,13 +93,13 @@ render =  () => {
       checkbox.type = 'checkbox'; // задаем тип для инпута.
       checkbox.checked = item.isCheck; // задаём чекбоксу свойство проверен ли он.
       checkbox.onchange = function () { //добавляем изменение при нажатии на чекбокс
-      onChangeCheckbox(index);
+      onChangeCheckbox(item._id, item.isCheck);
     };
     container.appendChild(checkbox); //добавляем в наш контейнер чекбокс.
     }
  
     if(!item.isCheck) { //проверяем и если не стоит галочка
-      if (item.id === activeEditTask) {//если индекс равен едиттаск
+      if (item._id === activeEditTask) {//если индекс равен едиттаск
         const imageDone = document.createElement('img');//создаем элемент изображение
         imageDone.src = 'images/check-mark.png';//заполняем иконкой галочки
         imageDone.onclick = function () {//при нажатии выполняем
@@ -107,7 +110,7 @@ render =  () => {
         const imageEdit = document.createElement('img');
         imageEdit.src = 'images/editing.png'//заполняем иконкой  карандаш
         imageEdit.onclick = function () {
-          activeEditTask = item.id;
+          activeEditTask = item._id;
           render();
         };
         container.appendChild(imageEdit)
@@ -123,7 +126,7 @@ render =  () => {
     const imageDelete = document.createElement('img');
     imageDelete.src = 'images/close.png';
     imageDelete.onclick = function () {
-      onDeleteTask(item.id);
+      onDeleteTask(item._id);
     }
     container.appendChild(imageDelete);
  
@@ -131,27 +134,34 @@ render =  () => {
   });  
 }
  
-onChangeCheckbox = (index) => {
-  allTasks[index].isCheck = !allTasks[index].isCheck;
- // localStorage.setItem('tasks',JSON.stringify(allTasks));
-  render()
+onChangeCheckbox = async(id,isChekt) => {
+ // allTasks[index].isCheck = !allTasks[index].isCheck;
+  const resp = await fetch(`http://localhost:8000/updateTask`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type':'application/json;charset=utf-8',
+      'Access-Control-Allow-Origin':'*'
+    },
+    body: JSON.stringify({
+      id: id,
+      isCheck: !isChekt       
+    })
+  });
+  refrashBd();
 }
  
 onDeleteTask = async (index) => {
-  allTasks.splice(index,1);
   const resp = await fetch(`http://localhost:8000/deleteTask?id=${index}`, {
     method: 'DELETE',
   });
-  let result = await resp.json();
-    allTasks=result.data;
-  //localStorage.setItem('tasks',JSON.stringify(allTasks));
-  render();
+  refrashBd();
 }
  
 updateTaskText = async (event) => {
   // allTasks[activeEditTask].text = event.target.value;// вводимое значение. 
   // console.log(allTasks[activeEditTask].text);
-  console.log(activeEditTask);
+  // console.log(event.target.value);
+  console.log(activeEditTask, event.target.value);
   const resp = await fetch(`http://localhost:8000/updateTask`, {
     method: 'PATCH',
     headers: {
@@ -163,11 +173,11 @@ updateTaskText = async (event) => {
       text: event.target.value,     
     })
   });
-  let result = await resp.json();
-  console.log(result);
-    allTasks=result.data;
+  // let result = await resp.json();
+  // console.log(result);
+  // allTasks=result.data;
  // localStorage.setItem('tasks',JSON.stringify(allTasks));
-  render();
+ refrashBd();
 }
  
 doneEditTask = () => {

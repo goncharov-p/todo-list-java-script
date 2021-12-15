@@ -40,7 +40,6 @@ onClickButton = async() => {
       allTasks.push(res);
       valueInput = '';
       input.value = '';
-
       render();
     });
   } else {
@@ -79,7 +78,7 @@ render =  () => {
       const inputTask = document.createElement('input');
       inputTask.type = 'text';
       inputTask.value = item.text;
-      inputTask.addEventListener('change',updateTaskText);
+      inputTask.addEventListener('change', (e) => updateTaskText(e, item._id));
       inputTask.addEventListener('blur', doneEditTask);
       container.appendChild(inputTask)
     } else{
@@ -119,14 +118,15 @@ render =  () => {
     const imageDelete = document.createElement('img');
     imageDelete.src = 'images/close.png';
     imageDelete.onclick = () => {
-      onDeleteTask(item._id);
+      onDeleteTask(item._id,index);
     }
     container.appendChild(imageDelete);
     content.appendChild(container);
   });  
 }
+
  
-onChangeCheckbox = async(id,isChekt) => {
+onChangeCheckbox = async(id,Check) => {
   const resp = await fetch(`${link}/updateTask`, {
     method: 'PATCH',
     headers: {
@@ -135,20 +135,37 @@ onChangeCheckbox = async(id,isChekt) => {
     },
     body: JSON.stringify({
       id: id,
-      isCheck: !isChekt       
+      isCheck: !Check       
     })
   });
-  getTasks();
+  if(resp){
+    allTasks = allTasks.map(item => {
+      const newTask = {...item};
+      if (item._id === id) {
+        newTask.isCheck= !Check;
+      }
+      return newTask
+    })
+    render();
+  }
 }
  
 onDeleteTask = async (idToDel) => {
   const resp = await fetch(`${link}/deleteTask?id=${idToDel}`, {
     method: 'DELETE',
   });
-  getTasks();
+  if(resp){
+    allTasks.forEach((item,index) => {
+      if (item._id === idToDel) {
+        allTasks.splice(index,1);
+      }
+      return allTasks
+    })
+    render();
+  }
 }
  
-updateTaskText = async (event) => {
+updateTaskText = async (event, id) => {
   const resp = await fetch(`${link}/updateTask`, {
     method: 'PATCH',
     headers: {
@@ -156,11 +173,20 @@ updateTaskText = async (event) => {
       'Access-Control-Allow-Origin':'*'
     },
     body: JSON.stringify({
-      id: activeEditTask,
+      id: id,
       text: event.target.value,     
     })
   });
-  getTasks();
+  if(resp){
+    allTasks = allTasks.map(item => {
+      const newTask = {...item};
+      if (item._id === id) {
+        newTask.text = event.target.value
+      }
+      return newTask
+    })
+    render();
+  }
 }
  
 doneEditTask = () => {

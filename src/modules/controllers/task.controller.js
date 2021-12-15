@@ -68,27 +68,7 @@ module.exports.changeTaskInfo = (req, res) => {
   const id = req.body.id;
   const selector = { _id: id };
   
-  // if (body.hasOwnProperty("isCheck") && body.hasOwnProperty("id")) {  
-  //   Task.updateOne(selector, {
-  //     $set: { isCheck: body.isCheck }
-  //   }).then(result => {
-  //       res.send(result)
-  //     }).catch(err => {
-  //       res.send(err);});
-
-  // } else if (body.hasOwnProperty("id") && body.hasOwnProperty("text")) {
-  //   let newText = body.text; 
-
-  //   Task.updateOne(selector, {
-  //       $set: { text: newText }
-  //     }).then(result => {
-  //         res.send(result)
-  //       }
-  //     ).catch(err => {
-  //        res.send(err)}
-  //   )}; 
-
-if(body.hasOwnProperty("text")|| body.hasOwnProperty("isCheck")){
+if(body.hasOwnProperty('id') && (body.hasOwnProperty('text') || body.hasOwnProperty('isCheck'))){
   let newText = body.text;
 
   Task.updateOne(selector, {

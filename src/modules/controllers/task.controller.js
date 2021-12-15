@@ -3,16 +3,25 @@ const Tasks = require('../../db/models/task/index')
 module.exports.getAllTasks = (req, res) => {
   Task.find().then(result => {
     res.send({ data: result });
-  });
+  }).catch(err => console.log(err));
 };
 
 module.exports.createNewTask = (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   const body = req.body;
+  if ((body.hasOwnProperty('text') || body.hasOwnProperty('isCheck'))) {
+    const task = new Task({
+      text: body.text,
+      isCheck: body.isCheck
+    });
+    task.save().then(result => {
+      res.send(result);
+    }).catch(err => console.log(err));
+  }
+}
 
-module.exports.changeTaskInfo = (req, res, next) => {
+module.exports.changeTaskInfo = (req, res) => {
   const body = req.body;
-  
   if (body.hasOwnProperty('id') && (body.hasOwnProperty('text') || body.hasOwnProperty('isCheck'))) {
     tasks.forEach((item, i) => {
       if(item.id === body.id) {
@@ -27,7 +36,7 @@ module.exports.changeTaskInfo = (req, res, next) => {
   }
 };
 
-module.exports.deleteTask = (req, res, next) => {
+module.exports.deleteTask = (req, res) => {
   if (!req.query.id) return res.status(422).send('Error! Params not correct');
   
   const task = tasks.filter(item => item.id === req.query.id);
@@ -59,24 +68,36 @@ module.exports.changeTaskInfo = (req, res) => {
   const id = req.body.id;
   const selector = { _id: id };
   
-  if (body.hasOwnProperty("isCheck") && body.hasOwnProperty("id")) {  
-    Task.updateOne(selector, {
-      $set: { isCheck: body.isCheck }
+  // if (body.hasOwnProperty("isCheck") && body.hasOwnProperty("id")) {  
+  //   Task.updateOne(selector, {
+  //     $set: { isCheck: body.isCheck }
+  //   }).then(result => {
+  //       res.send(result)
+  //     }).catch(err => {
+  //       res.send(err);});
+
+  // } else if (body.hasOwnProperty("id") && body.hasOwnProperty("text")) {
+  //   let newText = body.text; 
+
+  //   Task.updateOne(selector, {
+  //       $set: { text: newText }
+  //     }).then(result => {
+  //         res.send(result)
+  //       }
+  //     ).catch(err => {
+  //        res.send(err)}
+  //   )}; 
+
+if(body.hasOwnProperty("text")|| body.hasOwnProperty("isCheck")){
+  let newText = body.text;
+
+  Task.updateOne(selector, {
+    $set: {isCheck:body.isCheck,
+            text: newText}
     }).then(result => {
         res.send(result)
-      }).catch(err => {
-        res.send(err);});
-
-  } else if (body.hasOwnProperty("id") && body.hasOwnProperty("text")) {
-    let newText = body.text; 
-
-    Task.updateOne(selector, {
-        $set: { text: newText }
-      }).then(result => {
-          res.send(result)
-        }
-      ).catch(err => {
-         res.send(err)}
-    )}; 
-  }
+    }).catch(err => {
+        res.send(err)
+      })
+  } 
 }

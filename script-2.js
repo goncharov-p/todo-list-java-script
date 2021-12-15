@@ -126,7 +126,7 @@ render =  () => {
 }
 
  
-onChangeCheckbox = async(id,Check) => {
+onChangeCheckbox = async(id,isCheck) => {
   const resp = await fetch(`${link}/updateTask`, {
     method: 'PATCH',
     headers: {
@@ -135,14 +135,14 @@ onChangeCheckbox = async(id,Check) => {
     },
     body: JSON.stringify({
       id: id,
-      isCheck: !Check       
+      isCheck: !isCheck       
     })
   });
   if(resp){
     allTasks = allTasks.map(item => {
       const newTask = {...item};
       if (item._id === id) {
-        newTask.isCheck= !Check;
+        newTask.isCheck= !isCheck;
       }
       return newTask
     })
@@ -154,6 +154,7 @@ onDeleteTask = async (idToDel) => {
   const resp = await fetch(`${link}/deleteTask?id=${idToDel}`, {
     method: 'DELETE',
   });
+
   if(resp){
     allTasks.forEach((item,index) => {
       if (item._id === idToDel) {
